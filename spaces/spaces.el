@@ -6,7 +6,7 @@
 ;;
 ;; Spaces helps you manage complex window configurations by letting you
 ;; give them names and quickly switch between them. The core functions
-;; are sp-new-space, sp-delete-space, and sp-switch-space.
+;; are sp-new-space, sp-kill-space, and sp-switch-space.
 ;;
 ;;; Code:
 
@@ -89,20 +89,20 @@ automatically when you use sp-switch-space."
   (sp-new-space sp-current-space))
 
 (defun sp-clear-spaces (&optional disable-prompt)
-  "Deletes all spaces. Prompts the user to confirm unless
+  "Kills all spaces. Prompts the user to confirm unless
 DISABLE-PROMPT is non-nil."
   (interactive)
-  (when (and sp-spaces (not disable-prompt) (y-or-n-p "really delete all spaces? "))
+  (when (and sp-spaces (not disable-prompt) (y-or-n-p "really kill all spaces? "))
     (setq sp-spaces nil)
     (setq sp-current-space nil)))
 
-(defun sp-delete-space (&optional name)
-  "Deletes the specified space. Called interactively,
-prompts the user for the space to delete."
+(defun sp-kill-space (&optional name)
+  "Kills the specified space. Called interactively,
+prompts the user for the space to kill."
   (interactive)
   (if (null sp-spaces)
       (error "no spaces defined yet")
-      (let ((name (if name name (ido-completing-read "delete space: "
+      (let ((name (if name name (ido-completing-read "kill space: "
                                                      (append (sp-space-names) '("*all*"))))))
         (when (not (sp-string-empty name))
           (if (string-equal name "*all*")
