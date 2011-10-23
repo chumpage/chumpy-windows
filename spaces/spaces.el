@@ -141,4 +141,13 @@ config."
                                 (sp-apply-space-config name))
                          (sp-new-space name))))))))
 
+(defun sp-show-space ()
+  "Show the current space in the minibuffer."
+  (interactive)
+  (if sp-current-space
+      (message "%s" sp-current-space)
+      (if sp-spaces
+          (message "no space selected")
+          (message "no spaces defined"))))
+
 (provide 'spaces)
