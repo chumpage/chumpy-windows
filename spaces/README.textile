@@ -7,13 +7,10 @@ Spaces.el lets you easily assign a name to a window configuration, then switch b
 The only function you really need is sp-switch-space. You can use it both to switch to an existing space and to create new spaces. A typical session would look something like this.
 
 * Set up some complicated window configuration.
-* M-x sp-switch-space
-* Type "default" and press enter. This creates a new space.
-* M-x sp-switch-space
-* Type "gdb" and press enter. Now you have two spaces, one named "default" and one named "gdb".
+* M-x sp-switch-space. Type "default" and press enter. This creates a new space.
+* M-x sp-switch-space. Type "gdb" and press enter. Now you have two spaces, one named "default" and one named "gdb".
 * M-x gdb. Run gdb with gdb-many-windows set to t, which launches gdb with a specific window configuration, obliterating your carefully set up window config.
-* M-x sp-switch-space
-* Select the "default" space to reload your previous window config. Use sp-switch-space to switch back and forth between the spaces.
+* M-x sp-switch-space. Select the "default" space to reload your previous window config. Use sp-switch-space to switch back and forth between the spaces.
 
 You should obviously bind sp-switch-space to a key for convenience.
 
