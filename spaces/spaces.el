@@ -5,8 +5,11 @@
 ;;; Commentary:
 ;;
 ;; Spaces helps you manage complex window configurations by letting you
-;; give them names and quickly switch between them. The core functions
-;; are sp-new-space, sp-kill-space, and sp-switch-space.
+;; give them names and quickly switch between them. The core function
+;; is sp-switch-space.
+;;
+;; See https://github.com/chumpage/spaces.el for more documentation, and
+;; to submit patches.
 ;;
 ;;; Code:
 
