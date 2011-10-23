@@ -28,7 +28,7 @@ Internally, spaces.el is just a wrapper around current-window-configuration and 
 
 Selecting a space is done using ido-completing-read, for convenience.
 
-One really annoying thing about current-window-configuration is that it saves the location of the cursor ("point" in emacs terminology) of each window, and resets point to the saved value when you load the window config, even if you've played around with the buffer and moved to some other location since you've saved the window config. It'd be preferable if set-window-configuration kept point the same as it was when you last visited the buffer. I've seen other people "complaining":http://stackoverflow.com/questions/5830494/windows-configuration-to-registers/ about this.
+One really annoying thing about current-window-configuration is that it saves the location of the cursor ("point" in emacs terminology) of each window, and resets point to the saved value when you load the window config, even if you've played around with the buffer and moved to some other location since you created the window config. It'd be preferable if set-window-configuration kept point the same as it was when you last visited the buffer. I've seen other people "complaining":http://stackoverflow.com/questions/5830494/windows-configuration-to-registers/ about this.
 
 Before loading a window config, spaces.el stores each buffer's point, and then restores point in each visible buffer after the window config is loaded. This takes care of the "don't save the point" problem.
 
