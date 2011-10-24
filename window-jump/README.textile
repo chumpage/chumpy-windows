@@ -1,0 +1,29 @@
+Window-jump.el is an emacs library to directionally navigate your emacs windows.
+
+h2. What does it do?
+
+Out of the box, emacs provides the other-window function (C-x o) for navigating around your windows. It moves you forward/backward one or more windows depending on the argument you give it. Unfortunately the ordering of the windows isn't very clearly defined, and navigating through the list of windows linearly is pretty clumsy if you have a lot of windows.
+
+Window-jump.el provides a superior window navigation mechanism by letting you specify the direction of the window you want to move to. Call window-jump-right and it takes you to the window to the right of the current window, and similarly for the other directions. This makes navigating complex window layouts very easy.
+
+The core functions are window-jump-left, window-jump-right, window-jump-up, and window-jump-down. You'll want to bind these to some keys.
+
+There are two parameters you might want to customize. wj-wrap controls whether or not to wrap the window jumping behavior. It defaults to nil, but if you set it to t, jumping to the right window when you're already in the rightmost window will take you to the leftmost window instead. wj-jump-frames, when set to t, will jump to windows in other frames as well as the current frame. It defaults to nil.
+
+h2. Setup and Requirements
+
+Put window-jump.el somewhere on your load-path, then (require 'window-jump).
+
+It should work with just about any version of emacs, including emacs run in a terminal.
+
+h2. How it works
+
+Window-jump.el uses ray-box intersection tests to find the closest window in a particular direction. Using a very general vector math approach like this allows window-jump.el to make intelligent decisions about which window to jump to even when you have a very complex window layout. Window-jump.el handles any arbitrary window layout with ease.
+
+h2. Related libs
+
+Windmove comes with emacs and serves the same purpose as window-jump.el. It's implementation isn't based on ray-box intersection testing, and isn't quite as robust when it comes to handling the more arbitrary layouts you can get when you're using multiple frames. I need to draw up a diagram to explain this.
+
+The emacs wiki has a "discussion":http://www.emacswiki.org/emacs/CategoryWindows of different ways to navigate your windows.
+
+I've written some other libs related to window management. Check out "spaces.el":https://github.com/chumpage/spaces.el and "window-grid.el":https://github.com/chumpage/window-grid.el.
