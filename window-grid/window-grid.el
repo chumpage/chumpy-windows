@@ -92,12 +92,11 @@ is guaranteed to have the same number of windows."
     (nreverse rows)))
 
 (defun wg-load-buffer-in-window (buffer window)
-  (display-buffer-reuse-window buffer (list window nil nil)))
+  (set-window-buffer window buffer)
+  (eq (window-buffer window) (get-buffer buffer)))
 
 (defun wg-maybe-load-buffer-in-window (buffer window)
-  (if (and buffer (get-buffer buffer) (wg-load-buffer-in-window buffer window))
-      t
-      nil))
+  (and buffer (get-buffer buffer) (wg-load-buffer-in-window buffer window)))
 
 (defun window-grid (&optional rows cols buffers default-buffer)
   "Splits the frame into a grid of evenly sized windows of ROWS x
@@ -273,9 +272,10 @@ For example, to get a 75%-25% vertical split, you would do
       ;; (map 'list (lambda (window buffer) (wg-maybe-load-buffer-in-window buffer window))
       ;;    windows (second layout))
       (map 'list (lambda (window window-info)
-                   (wg-maybe-load-buffer-in-window (first window-info) window)
-                   (set-window-start window (second window-info)))
+                   (when (wg-maybe-load-buffer-in-window (first window-info) window)
+                     (set-window-start window (second window-info))))
          windows (second layout))
+      nil
       )))
 
 ;; (defun wg-delete-other-windows ()
