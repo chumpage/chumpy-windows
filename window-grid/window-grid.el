@@ -354,13 +354,6 @@ and columns."
          windows (second layout))
       nil)))
 
-;; (defun wg-delete-other-windows ()
-;;   (if (not (eq (selected-window) (minibuffer-window)))
-;;       (delete-other-windows)
-;;       (save-selected-window
-;;         (select-window (car (window-list nil 'no-minibuf)))
-;;         (delete-other-windows))))
-
 (defun wg-select-non-minibuffer-window ()
   (select-window (car (window-list nil 'no-minibuf))))
 
