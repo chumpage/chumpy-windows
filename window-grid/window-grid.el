@@ -322,11 +322,13 @@ and columns."
 
 (defun wg-determine-window-layout (&optional shrink-direction)
   (list (wg-determine-window-layout-recursive (wg-sorted-window-list) shrink-direction)
-        ;; !!! preserve window-start?
-        ;(mapcar (lambda (w) (window-buffer w)) (wg-sorted-window-list))
-        (mapcar (lambda (w) (list (window-buffer w) (window-start w)))
-                (wg-sorted-window-list))
-        ))
+        ;; we need to explicitly preserve and reapply the window-start and
+        ;; window-hscroll, otherwise redisplay will reposition those values so that
+        ;; point is in the middle of the window
+        (mapcar (lambda (w) (list (window-buffer w)
+                                  (window-start w)
+                                  (window-hscroll w)))
+                (wg-sorted-window-list))))
 
 (defun wg-apply-window-layout-recursive (layout window)
   (when layout
@@ -345,15 +347,12 @@ and columns."
                                                (<= (wg-right-edge w) wr)
                                                (<= (wg-bottom-edge w) wb))))))
       (assert (= (length windows) (length (second layout))))
-      ;; !!! preserve window-start?
-      ;; (map 'list (lambda (window buffer) (wg-load-buffer-in-window buffer window))
-      ;;    windows (second layout))
       (map 'list (lambda (window window-info)
                    (when (wg-load-buffer-in-window (first window-info) window)
-                     (set-window-start window (second window-info))))
+                     (set-window-start window (second window-info))
+                     (set-window-hscroll window (third window-info))))
          windows (second layout))
-      nil
-      )))
+      nil)))
 
 ;; (defun wg-delete-other-windows ()
 ;;   (if (not (eq (selected-window) (minibuffer-window)))
