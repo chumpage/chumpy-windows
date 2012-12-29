@@ -12,7 +12,7 @@
 ;;; Code:
 
 (require 'window-jump)
-(require 'window-grid)
+(require 'window-layout)
 (require 'spaces)
 
 (provide 'chumpy-windows)

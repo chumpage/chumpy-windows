@@ -1,11 +1,12 @@
-;;; window-grid.el -- Create grids of windows.
+;;; window-layout.el -- Modify window layout, create grids of windows, etc.
 ;;
 ;; Author: Steven Thomas
 ;;
 ;;; Commentary:
 ;;
-;; Window-grid lets you easily create a grid of windows. Just specify
-;; the rows and columns. The core function is window-grid.
+;; Window-layout lets you easily declare and apply sophisticated window
+;; layouts, create grids of windows, and intelligently shrink a window
+;; layout to create room for a new window.
 ;;
 ;; See https://github.com/chumpage/chumpy-windows for more
 ;; documentation, and to submit patches.
@@ -14,28 +15,28 @@
 
 (require 'cl)
 
-(defun wg-clamp (val min max)
+(defun wl-clamp (val min max)
   (max (min val max) min))
 
-(defun wg-pad-list (lst min-length value)
+(defun wl-pad-list (lst min-length value)
   (if (>= (length lst) min-length)
       lst
       (append lst (make-list (- min-length (length lst)) value))))
 
-(defun wg-ndsort (lst predicate)
+(defun wl-ndsort (lst predicate)
   (sort (copy-sequence lst) predicate))
 
-(defun wg-flatten (lst)
+(defun wl-flatten (lst)
   (mapcan (lambda (x) (if (listp x) x nil)) lst))
 
-(defun wg-filter (filter-list predicate)
+(defun wl-filter (filter-list predicate)
   (let ((result))
     (dolist (filter-list-val filter-list)
       (when (funcall predicate filter-list-val)
         (push filter-list-val result)))
     (nreverse result)))
 
-(defun wg-partition (partition-list predicate)
+(defun wl-partition (partition-list predicate)
   (let ((success-list) (fail-list))
     (dolist (partition-list-val partition-list)
       (if (funcall predicate partition-list-val)
@@ -43,17 +44,17 @@
           (push partition-list-val fail-list)))
     (list (nreverse success-list) (nreverse fail-list))))
 
-(defun wg-window-size-for-split-direction (window direction)
+(defun wl-window-size-for-split-direction (window direction)
   (if (eq direction 'h)
       (window-width window)
       (window-height window)))
 
-(defun wg-split-direction-horizontal-p (direction)
+(defun wl-split-direction-horizontal-p (direction)
   (if (eq direction 'h)
       t
       nil))
 
-(defun wg-normalize-window-size (size window-size &optional round-fn)
+(defun wl-normalize-window-size (size window-size &optional round-fn)
   (when (null round-fn) (setq round-fn 'round))
   (let ((size-in-chars (if (and (> size -1) (< size 1))
                            (funcall round-fn (* (float size) window-size))
@@ -62,18 +63,18 @@
         (- window-size size-in-chars)
         size-in-chars)))
 
-(defun wg-tweak-window-size (direction size windows)
+(defun wl-tweak-window-size (direction size windows)
   (let* ((total-size
           (reduce '+ windows :key
-                  (lambda (w) (wg-window-size-for-split-direction w direction))))
-         (win-1-desired-size (wg-normalize-window-size size total-size)))
+                  (lambda (w) (wl-window-size-for-split-direction w direction))))
+         (win-1-desired-size (wl-normalize-window-size size total-size)))
     (adjust-window-trailing-edge
      (car windows)
      (- win-1-desired-size
-        (wg-window-size-for-split-direction (car windows) direction))
-     (wg-split-direction-horizontal-p direction))))
+        (wl-window-size-for-split-direction (car windows) direction))
+     (wl-split-direction-horizontal-p direction))))
 
-(defun wg-split (direction size &optional window)
+(defun wl-split (direction size &optional window)
   "Used to split windows. DIRECTION should be 'h or 'v to specify
 the direction in which to split.
 
@@ -90,24 +91,24 @@ WINDOW is the window to split, and defaults to the selected
 window.
 
 For example, to get a 75%-25% vertical split, you would do
-  (wg-split 'v .75)
+  (wl-split 'v .75)
 
 To get a vertical split where the bottom window is sized to 10
 characters, you would do
-  (wg-split 'v -10)
+  (wl-split 'v -10)
 
 The return value is a list of the two windows, left/right in a
 horizontal split and top/bottom in a vertical split."
   (when (null window) (setq window (selected-window)))
   (destructuring-bind (wl wt wr wb) (window-pixel-edges window)
     (split-window window nil
-                  (wg-split-direction-horizontal-p direction))
-    (let ((windows (list (wg-get-window-from-top-left wl wt)
-                         (wg-get-window-from-bottom-right wr wb))))
-      (wg-tweak-window-size direction size windows)
+                  (wl-split-direction-horizontal-p direction))
+    (let ((windows (list (wl-get-window-from-top-left wl wt)
+                         (wl-get-window-from-bottom-right wr wb))))
+      (wl-tweak-window-size direction size windows)
       windows)))
 
-(defun wg-verify-split*-sizes (num-windows sizes)
+(defun wl-verify-split*-sizes (num-windows sizes)
   (setq sizes (copy-tree sizes))
   (when (or (< (length sizes) (1- num-windows))
             (> (length sizes) num-windows))
@@ -125,39 +126,39 @@ horizontal split and top/bottom in a vertical split."
         (error (format "sum of sizes (%f) too low. should be 1." sum)))))
   sizes)
 
-(defun wg-tweak-window-size-multiple (direction sizes windows)
+(defun wl-tweak-window-size-multiple (direction sizes windows)
   (let* ((available-size
           (reduce '+ windows :key
-                  (lambda (w) (wg-window-size-for-split-direction w direction))))
+                  (lambda (w) (wl-window-size-for-split-direction w direction))))
          (normalized-sizes
-          (mapcar (lambda (size) (wg-normalize-window-size size available-size 'floor))
+          (mapcar (lambda (size) (wl-normalize-window-size size available-size 'floor))
                   sizes))
          (used-size (reduce '+ normalized-sizes))
          (leftover (- available-size used-size)))
     (dotimes (n (- (length windows) 1))
       (adjust-window-trailing-edge
        (nth n windows)
-       (+ (wg-clamp leftover 0 1)
+       (+ (wl-clamp leftover 0 1)
           (- (nth n normalized-sizes)
-             (wg-window-size-for-split-direction (nth n windows) direction)))
-       (wg-split-direction-horizontal-p direction))
+             (wl-window-size-for-split-direction (nth n windows) direction)))
+       (wl-split-direction-horizontal-p direction))
       (setq leftover (1- leftover)))))
 
-(defun wg-split* (direction num-windows &optional sizes window)
+(defun wl-split* (direction num-windows &optional sizes window)
   (when (null sizes) (setq sizes (make-list num-windows (/ 1.0 num-windows))))
-  (setq sizes (wg-verify-split*-sizes num-windows sizes))
+  (setq sizes (wl-verify-split*-sizes num-windows sizes))
   (when (null window) (setq window (selected-window)))
   (let ((windows (list window)))
     (dotimes (n (- num-windows 1))
       (destructuring-bind (win-1 win-2)
-          (wg-split direction window-min-height window)
+          (wl-split direction window-min-height window)
         (setq window win-2)
         (setq windows (cons win-2 windows))))
     (setq windows (nreverse windows))
-    (wg-tweak-window-size-multiple direction sizes windows)
+    (wl-tweak-window-size-multiple direction sizes windows)
     windows))
 
-(defun wg-window-sort-predicate (w1 w2)
+(defun wl-window-sort-predicate (w1 w2)
   (let* ((w1-x (nth 0 (window-pixel-edges w1)))
          (w1-y (nth 1 (window-pixel-edges w1)))
          (w2-x (nth 0 (window-pixel-edges w2)))
@@ -166,17 +167,17 @@ horizontal split and top/bottom in a vertical split."
         (< w1-y w2-y)
         (< w1-x w2-x))))
 
-(defun wg-partition-list (lst fn)
+(defun wl-partition-list (lst fn)
   (let* ((non-matching-elts (remove-if fn lst))
          (matching-elts (set-difference lst non-matching-elts)))
     (list matching-elts non-matching-elts)))
 
-(defun wg-sorted-window-list (&optional windows)
+(defun wl-sorted-window-list (&optional windows)
   "Provides a list of windows sorted from top-left to bottom-right."
   (when (null windows) (setq windows (window-list nil 'no-minibuf)))
-  (wg-ndsort windows 'wg-window-sort-predicate))
+  (wl-ndsort windows 'wl-window-sort-predicate))
 
-(defun wg-load-buffer-in-window (buffer window)
+(defun wl-load-buffer-in-window (buffer window)
   (if (and buffer (get-buffer buffer))
       (progn (set-window-buffer window buffer)
              (eq (window-buffer window) (get-buffer buffer)))
@@ -203,26 +204,26 @@ and columns."
   (when (<= (min rows cols) 0)
     (error "window-grid: invalid rows/cols"))
   (delete-other-windows)
-  (wg-split* 'v rows)
-  (let ((windows (wg-sorted-window-list)))
+  (wl-split* 'v rows)
+  (let ((windows (wl-sorted-window-list)))
     (assert (= (length windows) rows))
     (mapc (lambda (window)
             (select-window window)
-            (wg-split* 'h cols))
+            (wl-split* 'h cols))
           windows))
-  (let* ((windows (wg-sorted-window-list))
-         (buffers (wg-pad-list buffers (length windows) nil)))
-    (map 'list (lambda (window buffer) (or (wg-load-buffer-in-window buffer window)
-                                           (wg-load-buffer-in-window default-buffer window)))
+  (let* ((windows (wl-sorted-window-list))
+         (buffers (wl-pad-list buffers (length windows) nil)))
+    (map 'list (lambda (window buffer) (or (wl-load-buffer-in-window buffer window)
+                                           (wl-load-buffer-in-window default-buffer window)))
          windows buffers))
-  (select-window (car (wg-sorted-window-list))))
+  (select-window (car (wl-sorted-window-list))))
 
-(defun wg-left-edge (window) (nth 0 (window-pixel-edges window)))
-(defun wg-top-edge (window) (nth 1 (window-pixel-edges window)))
-(defun wg-right-edge (window) (nth 2 (window-pixel-edges window)))
-(defun wg-bottom-edge (window) (nth 3 (window-pixel-edges window)))
+(defun wl-left-edge (window) (nth 0 (window-pixel-edges window)))
+(defun wl-top-edge (window) (nth 1 (window-pixel-edges window)))
+(defun wl-right-edge (window) (nth 2 (window-pixel-edges window)))
+(defun wl-bottom-edge (window) (nth 3 (window-pixel-edges window)))
 
-(defun wg-windows-bounding-box (windows)
+(defun wl-windows-bounding-box (windows)
   (if (null windows)
       nil
       (let ((left most-positive-fixnum)
@@ -230,26 +231,26 @@ and columns."
             (right most-negative-fixnum)
             (bottom most-negative-fixnum))
         (dolist (w windows)
-          (when (< (wg-left-edge w) left) (setq left (wg-left-edge w)))
-          (when (< (wg-top-edge w) top) (setq top (wg-top-edge w)))
-          (when (> (wg-right-edge w) right) (setq right (wg-right-edge w)))
-          (when (> (wg-bottom-edge w) bottom) (setq bottom (wg-bottom-edge w))))
+          (when (< (wl-left-edge w) left) (setq left (wl-left-edge w)))
+          (when (< (wl-top-edge w) top) (setq top (wl-top-edge w)))
+          (when (> (wl-right-edge w) right) (setq right (wl-right-edge w)))
+          (when (> (wl-bottom-edge w) bottom) (setq bottom (wl-bottom-edge w))))
         (list left top right bottom))))
 
-(defun wg-get-windows-sharing-edge (windows edge-fn val)
-  (wg-filter windows (lambda (w) (= (funcall edge-fn w) val))))
+(defun wl-get-windows-sharing-edge (windows edge-fn val)
+  (wl-filter windows (lambda (w) (= (funcall edge-fn w) val))))
 
-(defun wg-get-window-from-top-left (left top)
-  (car (wg-filter (wg-sorted-window-list)
-                  (lambda (w) (and (= (wg-left-edge w) left)
-                                   (= (wg-top-edge w) top))))))
+(defun wl-get-window-from-top-left (left top)
+  (car (wl-filter (wl-sorted-window-list)
+                  (lambda (w) (and (= (wl-left-edge w) left)
+                                   (= (wl-top-edge w) top))))))
 
-(defun wg-get-window-from-bottom-right (right bottom)
-  (car (wg-filter (wg-sorted-window-list)
-                  (lambda (w) (and (= (wg-right-edge w) right)
-                                   (= (wg-bottom-edge w) bottom))))))
+(defun wl-get-window-from-bottom-right (right bottom)
+  (car (wl-filter (wl-sorted-window-list)
+                  (lambda (w) (and (= (wl-right-edge w) right)
+                                   (= (wl-bottom-edge w) bottom))))))
 
-(defun wg-check-split-continuation (windows
+(defun wl-check-split-continuation (windows
                                     continuing-edge-fn
                                     continuing-edge-val
                                     next-window-edge-fn
@@ -258,20 +259,20 @@ and columns."
                                     boundary-edge-val)
   (block nil
     (while t
-      (let ((next-window (car (wg-get-windows-sharing-edge
-                               (wg-get-windows-sharing-edge windows next-window-edge-fn next-window-edge-val)
+      (let ((next-window (car (wl-get-windows-sharing-edge
+                               (wl-get-windows-sharing-edge windows next-window-edge-fn next-window-edge-val)
                                continuing-edge-fn continuing-edge-val))))
         (when (null next-window) (return nil))
         (setq next-window-edge-val (funcall boundary-edge-fn next-window))
         (when (= next-window-edge-val boundary-edge-val) (return t))))))
 
-(defun wg-partition-windows-along-edge (windows direction edge)
+(defun wl-partition-windows-along-edge (windows direction edge)
   (case direction
-    ('h (wg-partition windows (lambda (w) (<= (wg-right-edge w) edge))))
-    ('v (wg-partition windows (lambda (w) (<= (wg-bottom-edge w) edge))))
-    (t (error "wg-partition: direction should be 'h or 'v"))))
+    ('h (wl-partition windows (lambda (w) (<= (wl-right-edge w) edge))))
+    ('v (wl-partition windows (lambda (w) (<= (wl-bottom-edge w) edge))))
+    (t (error "wl-partition: direction should be 'h or 'v"))))
 
-(defun wg-get-split-% (low high split-loc)
+(defun wl-get-split-% (low high split-loc)
   (/ (float (- split-loc low)) (- high low)))
 
 ;; specifying the shrink-direction is a nasty hack. when i know i'm shrinking
@@ -283,90 +284,90 @@ and columns."
 ;; then get rid of the shrink-direction parameter. one way to fix it would be to have a
 ;; post-layout-application window size tweak process, that tries to get the window
 ;; sizes to account for the window decorations. another way to fix it would be to
-;; detect multi-splits (i.e. wg-split* splits) and record those when i determine the
-;; window layout. the wg-split* function already handles the window sizing issue i'm
+;; detect multi-splits (i.e. wl-split* splits) and record those when i determine the
+;; window layout. the wl-split* function already handles the window sizing issue i'm
 ;; trying to work around here.
-(defun wg-determine-window-layout-recursive (windows &optional shrink-direction)
+(defun wl-determine-window-layout-recursive (windows &optional shrink-direction)
   (if (<= (length windows) 1)
       nil
       (block 'layout
-        (let ((windows (wg-sorted-window-list windows))
-              (box (wg-windows-bounding-box windows)))
+        (let ((windows (wl-sorted-window-list windows))
+              (box (wl-windows-bounding-box windows)))
           (dolist (w windows)
-            (when (and (= (wg-left-edge w) (nth 0 box))
-                       (/= (wg-bottom-edge w) (nth 3 box))
-                       (wg-check-split-continuation windows
-                                                    'wg-bottom-edge (wg-bottom-edge w)
-                                                    'wg-left-edge (wg-left-edge w)
-                                                    'wg-right-edge (nth 2 box)))
-              (let ((partitioned-windows (wg-partition-windows-along-edge
-                                          windows 'v (wg-bottom-edge w))))
+            (when (and (= (wl-left-edge w) (nth 0 box))
+                       (/= (wl-bottom-edge w) (nth 3 box))
+                       (wl-check-split-continuation windows
+                                                    'wl-bottom-edge (wl-bottom-edge w)
+                                                    'wl-left-edge (wl-left-edge w)
+                                                    'wl-right-edge (nth 2 box)))
+              (let ((partitioned-windows (wl-partition-windows-along-edge
+                                          windows 'v (wl-bottom-edge w))))
                 (return-from 'layout (list 'v
                                            (if (or (null shrink-direction) (eq shrink-direction 'v))
-                                               (wg-get-split-% (wg-top-edge w) (nth 3 box) (wg-bottom-edge w))
+                                               (wl-get-split-% (wl-top-edge w) (nth 3 box) (wl-bottom-edge w))
                                                (window-height w))
-                                           (wg-determine-window-layout-recursive (first partitioned-windows) shrink-direction)
-                                           (wg-determine-window-layout-recursive (second partitioned-windows) shrink-direction)))))
-            (when (and (= (wg-top-edge w) (nth 1 box))
-                       (/= (wg-right-edge w) (nth 2 box))
-                       (wg-check-split-continuation windows
-                                                    'wg-right-edge (wg-right-edge w)
-                                                    'wg-top-edge (wg-top-edge w)
-                                                    'wg-bottom-edge (nth 3 box)))
-              (let ((partitioned-windows (wg-partition-windows-along-edge
-                                          windows 'h (wg-right-edge w))))
+                                           (wl-determine-window-layout-recursive (first partitioned-windows) shrink-direction)
+                                           (wl-determine-window-layout-recursive (second partitioned-windows) shrink-direction)))))
+            (when (and (= (wl-top-edge w) (nth 1 box))
+                       (/= (wl-right-edge w) (nth 2 box))
+                       (wl-check-split-continuation windows
+                                                    'wl-right-edge (wl-right-edge w)
+                                                    'wl-top-edge (wl-top-edge w)
+                                                    'wl-bottom-edge (nth 3 box)))
+              (let ((partitioned-windows (wl-partition-windows-along-edge
+                                          windows 'h (wl-right-edge w))))
                 (return-from 'layout (list 'h
                                            (if (or (null shrink-direction) (eq shrink-direction 'h))
-                                               (wg-get-split-% (wg-left-edge w) (nth 2 box) (wg-right-edge w))
+                                               (wl-get-split-% (wl-left-edge w) (nth 2 box) (wl-right-edge w))
                                                (window-width w))
-                                           (wg-determine-window-layout-recursive (first partitioned-windows) shrink-direction)
-                                           (wg-determine-window-layout-recursive (second partitioned-windows) shrink-direction))))))
-          (error "wg-determine-window-layout-recursive: i shouldn't ever get here")))))
+                                           (wl-determine-window-layout-recursive (first partitioned-windows) shrink-direction)
+                                           (wl-determine-window-layout-recursive (second partitioned-windows) shrink-direction))))))
+          (error "wl-determine-window-layout-recursive: i shouldn't ever get here")))))
 
-(defun wg-determine-window-layout (&optional shrink-direction)
-  (list (wg-determine-window-layout-recursive (wg-sorted-window-list) shrink-direction)
+(defun wl-determine-window-layout (&optional shrink-direction)
+  (list (wl-determine-window-layout-recursive (wl-sorted-window-list) shrink-direction)
         ;; we need to explicitly preserve and reapply the window-start and
         ;; window-hscroll, otherwise redisplay will reposition those values so that
         ;; point is in the middle of the window
         (mapcar (lambda (w) (list (window-buffer w)
                                   (window-start w)
                                   (window-hscroll w)))
-                (wg-sorted-window-list))))
+                (wl-sorted-window-list))))
 
-(defun wg-apply-window-layout-recursive (layout window)
+(defun wl-apply-window-layout-recursive (layout window)
   (when layout
     (destructuring-bind (direction size layout-1 layout-2) layout
       (destructuring-bind (win-1 win-2)
-          (wg-split direction size window)
-        (wg-apply-window-layout-recursive layout-1 win-1)
-        (wg-apply-window-layout-recursive layout-2 win-2)))))
+          (wl-split direction size window)
+        (wl-apply-window-layout-recursive layout-1 win-1)
+        (wl-apply-window-layout-recursive layout-2 win-2)))))
 
-(defun wg-apply-window-layout (layout window)
+(defun wl-apply-window-layout (layout window)
   (destructuring-bind (wl wt wr wb) (window-pixel-edges window)
-    (wg-apply-window-layout-recursive (first layout) window)
-    (let ((windows (wg-filter (wg-sorted-window-list)
-                              (lambda (w) (and (>= (wg-left-edge w) wl)
-                                               (>= (wg-top-edge w) wt)
-                                               (<= (wg-right-edge w) wr)
-                                               (<= (wg-bottom-edge w) wb))))))
+    (wl-apply-window-layout-recursive (first layout) window)
+    (let ((windows (wl-filter (wl-sorted-window-list)
+                              (lambda (w) (and (>= (wl-left-edge w) wl)
+                                               (>= (wl-top-edge w) wt)
+                                               (<= (wl-right-edge w) wr)
+                                               (<= (wl-bottom-edge w) wb))))))
       (assert (= (length windows) (length (second layout))))
       (map 'list (lambda (window window-info)
-                   (when (wg-load-buffer-in-window (first window-info) window)
+                   (when (wl-load-buffer-in-window (first window-info) window)
                      (set-window-start window (second window-info))
                      (set-window-hscroll window (third window-info))))
          windows (second layout))
       nil)))
 
-(defun wg-select-non-minibuffer-window ()
+(defun wl-select-non-minibuffer-window ()
   (select-window (car (window-list nil 'no-minibuf))))
 
-(defun wg-shrink-window-layout (direction size)
+(defun wl-shrink-window-layout (direction size)
   (save-selected-window
-    (wg-select-non-minibuffer-window)
-    (let ((layout (wg-determine-window-layout direction)))
+    (wl-select-non-minibuffer-window)
+    (let ((layout (wl-determine-window-layout direction)))
       (delete-other-windows)
-      (destructuring-bind (win-1 win-2) (wg-split direction size)
-        (wg-apply-window-layout layout win-1)
+      (destructuring-bind (win-1 win-2) (wl-split direction size)
+        (wl-apply-window-layout layout win-1)
         win-2))))
 
-(provide 'window-grid)
+(provide 'window-layout)
