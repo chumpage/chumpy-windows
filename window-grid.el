@@ -7,6 +7,9 @@
 ;; Window-grid lets you easily create a grid of windows. Just specify
 ;; the rows and columns. The core function is window-grid.
 ;;
+;; See https://github.com/chumpage/chumpy-windows for more
+;; documentation, and to submit patches.
+;;
 ;;; Code:
 
 (require 'cl)

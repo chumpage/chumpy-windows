@@ -8,7 +8,7 @@
 ;; are window-jump-<left,right,up,down>. Bind them to some keys and
 ;; you'll be flying around your windows like Superman.
 ;;
-;; See https://github.com/chumpage/window-jump.el for more
+;; See https://github.com/chumpage/chumpy-windows for more
 ;; documentation, and to submit patches.
 ;;
 ;;; Code:

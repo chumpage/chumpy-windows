@@ -8,8 +8,8 @@
 ;; give them names and quickly switch between them. The core function
 ;; is sp-switch-space.
 ;;
-;; See https://github.com/chumpage/spaces.el for more documentation, and
-;; to submit patches.
+;; See https://github.com/chumpage/chumpy-windows for more
+;; documentation, and to submit patches.
 ;;
 ;;; Code:
 
