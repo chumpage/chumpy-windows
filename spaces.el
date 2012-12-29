@@ -122,7 +122,7 @@ current space. As a special case, if the space we're switching to
 is the current space, we reload the current space's saved
 config."
   (interactive)
-  (if (null sp-spaces)
+  (if (and (null name) (null sp-spaces))
       (error "no spaces defined yet")
       (let ((name (or name (ido-completing-read "space: "
                                                 (let ((names (sp-space-names)))
