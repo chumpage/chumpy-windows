@@ -1,7 +1,8 @@
 Chumpy-windows is an emacs library that provides useful window-related functionality that's missing from stock emacs. Chumpy-windows is composed of three libraries: window-jump, spaces, and window-layout. The libraries are grouped together because they're highly complimentary, and also for ease of maintenance.
 
-* auto-gen TOC:
-{:toc}
+- [Window-jump](#window-jump)
+- [Spaces](#spaces)
+- [Window-layout](#window-layout)
 
 Window-jump
 ===========
@@ -14,20 +15,17 @@ The core functions are window-jump-left, window-jump-right, window-jump-up, and 
 
 There are two parameters you might want to customize. wj-wrap controls whether or not to wrap the window jumping behavior. It defaults to nil, but if you set it to t, jumping to the right window when you're already in the rightmost window will take you to the leftmost window instead. wj-jump-frames, when set to t, will jump to windows in other frames as well as the current frame. It defaults to nil.
 
-Setup and Requirements
-----------------------
+#### Setup and Requirements
 
 Put window-jump.el somewhere on your load-path, then (require 'window-jump).
 
 It should work with just about any version of emacs, including emacs run in a terminal.
 
-How it works
-------------
+### How it works
 
 Window-jump.el uses ray-box intersection tests to find the closest window in a particular direction. Using a very general vector math approach like this allows window-jump.el to make intelligent decisions about which window to jump to even when you have a very complex window layout. Window-jump.el handles any arbitrary window layout with ease.
 
-Related libs
-------------
+### Related libs
 
 Windmove comes with emacs and serves the same purpose as window-jump.el. It's implementation isn't based on ray-box intersection testing, and isn't quite as robust when it comes to handling the more arbitrary layouts you can get when you're using multiple frames. I need to draw up a diagram to explain this.
 
@@ -50,15 +48,13 @@ You should obviously bind sp-switch-space to a key for convenience.
 
 Spaces.el has nothing to do with gdb of course. Gdb is just meant as an example. Spaces.el is particularly useful to help manage emacs libs (e.g. ediff) that need to muck around with the window config.
 
-Setup and Requirements
-----------------------
+### Setup and Requirements
 
 Put spaces.el somewhere on your load-path, then (require 'spaces).
 
 I've only tested with my standard emacs setup, which is a source checkout of the emacs 24 code. It should work with any emacs that supports ido-mode and has the current-window-configuration function.
 
-How it works
-------------
+### How it works
 
 Internally, spaces.el is just a wrapper around current-window-configuration and set-window-configuration. When you switch spaces, the current window config is stored, and the window config of the newly selected space is loaded.
 
