@@ -1,6 +1,10 @@
-;;; chumpy-windows.el -- Window management utilities
+;;; chumpy-windows.el --- Window management utilities
 ;;
 ;; Author: Steven Thomas
+;; Created: 30 Dec 2012
+;; Keywords: windows
+;; Version: 0.1.0
+;; URL: https://github.com/chumpage/chumpy-windows
 ;;
 ;;; Commentary:
 ;;
@@ -22,3 +26,5 @@
 (require 'spaces)
 
 (provide 'chumpy-windows)
+
+;;; chumpy-windows.el ends here

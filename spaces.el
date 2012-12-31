@@ -1,4 +1,4 @@
-;;; spaces.el -- Create and switch between named window configurations.
+;;; spaces.el --- Create and switch between named window configurations.
 ;;
 ;; Author: Steven Thomas
 ;;
@@ -154,3 +154,5 @@ config."
           (message "no spaces defined"))))
 
 (provide 'spaces)
+
+;;; spaces.el ends here

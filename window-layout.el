@@ -1,4 +1,4 @@
-;;; window-layout.el -- Modify window layout, create grids of windows, etc.
+;;; window-layout.el --- Modify window layout, create grids of windows, etc.
 ;;
 ;; Author: Steven Thomas
 ;;
@@ -371,3 +371,5 @@ and columns."
         win-2))))
 
 (provide 'window-layout)
+
+;;; window-layout.el ends here

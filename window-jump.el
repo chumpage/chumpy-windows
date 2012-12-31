@@ -1,4 +1,4 @@
-;;; window-jump.el -- Move left/right/up/down through your windows.
+;;; window-jump.el --- Move left/right/up/down through your windows.
 ;;
 ;; Author: Steven Thomas
 ;;
@@ -231,3 +231,5 @@ be one of wj-vec-left, wj-vec-right, wj-vec-down, or wj-vec-up."
   (window-jump wj-vec-up))
 
 (provide 'window-jump)
+
+;;; window-jump.el ends here
