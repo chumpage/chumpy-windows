@@ -1,4 +1,4 @@
-Chumpy-windows is an emacs library that provides useful window-related functionality that's missing from stock emacs. Chumpy-windows is composed of three libraries: window-jump, spaces, and window-layout. The libraries are grouped together because they're highly complimentary, and also for ease of maintenance.
+Chumpy-windows is an emacs library that provides useful window-related functionality that's missing from stock emacs. Chumpy-windows is composed of three libraries: window-jump, spaces, and window-layout. The libraries are grouped together because they're highly complementary, and also for ease of maintenance.
 
 - [Window-jump](#window-jump)
 - [Spaces](#spaces)
