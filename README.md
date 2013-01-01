@@ -1,8 +1,8 @@
-Chumpy-windows is an emacs library that provides useful window-related functionality that's missing from stock emacs. Chumpy-windows is composed of three libraries: window-jump, spaces, and window-layout. The libraries are grouped together because they're highly complementary, and also for ease of maintenance.
+Chumpy-windows is an emacs library that provides useful window-related functionality that's missing from stock emacs. Chumpy-windows is composed of three libraries: window-jump, spaces, and splitter. The libraries are grouped together because they're highly complementary, and also for ease of maintenance.
 
 - [Window-jump](#window-jump)
 - [Spaces](#spaces)
-- [Window-layout](#window-layout)
+- [Splitter](#splitter)
 
 Window-jump
 ===========
@@ -64,7 +64,7 @@ One really annoying thing about current-window-configuration is that it saves th
 
 Before loading a window config, spaces.el stores each buffer's point, and then restores point in each visible buffer after the window config is loaded. This takes care of the "don't save the point" problem.
 
-Window-layout
-=============
+Splitter
+========
 
-TODO
+Todo
