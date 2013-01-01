@@ -1,6 +1,10 @@
 ;;; window-jump.el --- Move left/right/up/down through your windows.
 ;;
 ;; Author: Steven Thomas
+;; Created: 16 Oct 2011
+;; Keywords: windows navigation
+;; Version: 0.1.0
+;; URL: https://github.com/chumpage/chumpy-windows
 ;;
 ;;; Commentary:
 ;;
