@@ -2,7 +2,7 @@
 ;;
 ;; Author: Steven Thomas
 ;; Created: 16 Oct 2011
-;; Keywords: windows
+;; Keywords: frames convenience
 ;; Version: 0.1.0
 ;; URL: https://github.com/chumpage/chumpy-windows
 ;;
