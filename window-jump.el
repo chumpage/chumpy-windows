@@ -206,6 +206,7 @@ be one of wj-vec-left, wj-vec-right, wj-vec-down, or wj-vec-up."
              (let ((window (wj-closest-window o d windows)))
                (when window
                  (wj-goto-window window)
+                 (deactivate-mark)
                  t))))
     (let* ((all-wnd-fn (if wj-jump-frames 'wj-all-windows 'window-list))
            (other-wnd-fn (if wj-jump-frames 'wj-all-other-windows 'wj-other-windows)))
