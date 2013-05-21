@@ -127,7 +127,7 @@ is the current space, we reload the current space's saved
 config."
   (interactive)
   (if (and (null name) (null sp-spaces))
-      (error "no spaces defined yet")
+      (call-interactively 'sp-new-space)
       (let ((name (or name (ido-completing-read "space: "
                                                 (let ((names (sp-space-names)))
                                                   (append
