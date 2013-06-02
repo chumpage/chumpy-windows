@@ -159,4 +159,8 @@ config."
 
 (provide 'spaces)
 
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:
+
 ;;; spaces.el ends here
