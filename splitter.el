@@ -78,18 +78,19 @@
         (spl-window-size-for-split-direction (car windows) direction))
      (spl-split-direction-horizontal-p direction))))
 
-(defun spl-split (direction size &optional window)
+(defun spl-split (direction &optional size window)
   "Used to split windows. DIRECTION should be 'h or 'v to specify
 the direction in which to split.
 
-SIZE specifies the size of the windows. If SIZE is positive, it
-applies to the left window in a horizontal split, and the top
-window in a vertical split. If SIZE is negative, it applies to
-the right window in a horizontal split, and the bottom window in
-a vertical split. In addition, SIZE can be given as either a
-float value between -1 and 1, in which case it's interpreted as a
-percentage. If SIZE is a value outside that range, it's
-interpreted as the number of characters to give to the window.
+SIZE specifies the size of the windows and defaults to .5. If
+SIZE is positive, it applies to the left window in a horizontal
+split, and the top window in a vertical split. If SIZE is
+negative, it applies to the right window in a horizontal split,
+and the bottom window in a vertical split. In addition, SIZE can
+be given as either a float value between -1 and 1, in which case
+it's interpreted as a percentage. If SIZE is a value outside that
+range, it's interpreted as the number of characters to give to
+the window.
 
 WINDOW is the window to split, and defaults to the selected
 window.
@@ -103,6 +104,7 @@ characters, you would do
 
 The return value is a list of the two windows, left/right in a
 horizontal split and top/bottom in a vertical split."
+  (when (null size) (setq size .5))
   (when (null window) (setq window (selected-window)))
   (destructuring-bind (wl wt wr wb) (window-pixel-edges window)
     (split-window window nil
@@ -215,12 +217,15 @@ and columns."
             (select-window window)
             (spl-split* 'h cols))
           windows))
+  (spl-set-window-buffers buffers default-buffer)
+  (select-window (car (spl-sorted-window-list))))
+
+(defun spl-set-window-buffers (buffers default-buffer)
   (let* ((windows (spl-sorted-window-list))
          (buffers (spl-pad-list buffers (length windows) nil)))
     (map 'list (lambda (window buffer) (or (spl-load-buffer-in-window buffer window)
                                            (spl-load-buffer-in-window default-buffer window)))
-         windows buffers))
-  (select-window (car (spl-sorted-window-list))))
+         windows buffers)))
 
 (defun spl-left-edge (window) (nth 0 (window-pixel-edges window)))
 (defun spl-top-edge (window) (nth 1 (window-pixel-edges window)))
@@ -340,11 +345,20 @@ and columns."
 
 (defun spl-apply-window-layout-recursive (layout window)
   (when layout
-    (destructuring-bind (direction size layout-1 layout-2) layout
-      (destructuring-bind (win-1 win-2)
-          (spl-split direction size window)
-        (spl-apply-window-layout-recursive layout-1 win-1)
-        (spl-apply-window-layout-recursive layout-2 win-2)))))
+    ;; Each layout can have one of two forms:
+    ;;   (h size layout1 layout2)
+    ;;   (h* num-windows (size1 size2...) (layout1 layout2...))
+    (if (find (car layout) '(h v))
+        (destructuring-bind (direction size layout-1 layout-2) layout
+          (destructuring-bind (win-1 win-2)
+              (spl-split direction size window)
+            (spl-apply-window-layout-recursive layout-1 win-1)
+            (spl-apply-window-layout-recursive layout-2 win-2)))
+        (destructuring-bind (direction num-windows sizes sub-layouts) layout
+          (let* ((direction (if (eq direction 'h*) 'h 'v))
+                 (windows (spl-split* direction num-windows sizes window)))
+            (mapcar* (lambda (layout window) (spl-apply-window-layout-recursive layout window))
+                     sub-layouts windows))))))
 
 (defun spl-apply-window-layout (layout window)
   (destructuring-bind (wl wt wr wb) (window-pixel-edges window)
@@ -353,14 +367,22 @@ and columns."
                               (lambda (w) (and (>= (spl-left-edge w) wl)
                                                (>= (spl-top-edge w) wt)
                                                (<= (spl-right-edge w) wr)
-                                               (<= (spl-bottom-edge w) wb))))))
-      (assert (= (length windows) (length (second layout))))
-      (map 'list (lambda (window window-info)
-                   (when (spl-load-buffer-in-window (first window-info) window)
-                     (set-window-start window (second window-info))
-                     (set-window-hscroll window (third window-info))))
-         windows (second layout))
+                                               (<= (spl-bottom-edge w) wb)))))
+          (window-data (second layout)))
+      (when window-data
+        (assert (= (length windows) (length (second layout))))
+        (map 'list (lambda (window window-info)
+                     (when (spl-load-buffer-in-window (first window-info) window)
+                       (set-window-start window (second window-info))
+                       (set-window-hscroll window (third window-info))))
+             windows (second layout)))
       nil)))
+
+(defun spl-flex-layout (layout buffers default-buffer)
+  (delete-other-windows)
+  (spl-apply-window-layout (list layout nil) (selected-window))
+  (spl-set-window-buffers buffers default-buffer)
+  (select-window (car (spl-sorted-window-list))))
 
 (defun spl-select-non-minibuffer-window ()
   (select-window (car (window-list nil 'no-minibuf))))
