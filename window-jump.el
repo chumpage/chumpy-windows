@@ -215,21 +215,25 @@ be one of wj-vec-left, wj-vec-right, wj-vec-down, or wj-vec-up."
             (attempt-jump (wj-wrap-jump-origin (wj-cursor-pos) d) (funcall all-wnd-fn)))
           (attempt-jump (wj-jump-origin d) (funcall other-wnd-fn))))))
 
+;;;###autoload
 (defun window-jump-left ()
   "Move to the window to the left of the current window."
   (interactive)
   (window-jump wj-vec-left))
 
+;;;###autoload
 (defun window-jump-right ()
   "Move to the window to the right of the current window."
   (interactive)
   (window-jump wj-vec-right))
 
+;;;###autoload
 (defun window-jump-down ()
   "Move to the window below the current window."
   (interactive)
   (window-jump wj-vec-down))
 
+;;;###autoload
 (defun window-jump-up ()
   "Move to the window above the current window."
   (interactive)
