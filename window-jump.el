@@ -202,7 +202,7 @@ vectors LS) and a point P."
 (defun window-jump (d)
   "Set the window in direction D as the selected window. D should
 be one of wj-vec-left, wj-vec-right, wj-vec-down, or wj-vec-up."
-  (labels ((attempt-jump (o windows)
+  (cl-labels ((attempt-jump (o windows)
              (let ((window (wj-closest-window o d windows)))
                (when window
                  (wj-goto-window window)
